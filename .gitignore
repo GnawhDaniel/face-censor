@@ -1,0 +1,11 @@
+# Ignore media
+*.mp4
+*.ui
+*.pt
+*.gif
+*.png
+
+test.ipynb
+
+.image_cache
+.vscode
