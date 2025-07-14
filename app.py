@@ -14,6 +14,8 @@ from PyQt6.QtWidgets import (
 from core.censorface import CensorFace
 from core.choose_component import ChooseWidgets
 import os
+from multiprocessing import Process
+from utils.delete_layout import reset_window
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -25,7 +27,9 @@ class MainWindow(QMainWindow):
         # State
         self.video_set = False
         self.overlay_set = False
+        
         self.output_path = "output/censored_video.mp4"  # Default output path
+        self.process = None
 
         # Layout
         self.main_layout = QVBoxLayout()
@@ -37,8 +41,6 @@ class MainWindow(QMainWindow):
         self.content_layout.setSpacing(0)  # Set to 0 for no vertical/horizontal spacing
         for col in range(2):
             self.content_layout.setColumnStretch(col, 1)
-        # for row in range(2):
-        #     self.content_layout.setRowStretch(row, 1)
 
         # Pick Video File
         vid_widget = ChooseWidgets(
@@ -87,18 +89,17 @@ class MainWindow(QMainWindow):
             output_path=self.output_path
         )
 
-    @staticmethod
-    def _reset_window(layout):
-        while layout.count():
-            item = layout.takeAt(0)
+    def _process_video_window(self):
+        self.process = Process(target=self.censor.execute)
 
-            widget = item.widget()
-            if widget is not None:
-                layout.removeWidget(widget)
-                widget.deleteLater()
+        start_button = QPushButton("Start Processing")
+        start_button.clicked.connect(lambda: self.process.start())
+        self.main_layout.addWidget(start_button, alignment=Qt.AlignmentFlag.AlignCenter)
 
-            elif item.layout():
-                MainWindow._reset_window(item.layout())
+        stop_button = QPushButton("Stop Processing")
+        stop_button.clicked.connect(lambda: self.process.terminate())
+        self.main_layout.addWidget(stop_button, alignment=Qt.AlignmentFlag.AlignCenter)
+        
 
     def _on_video_button_clicked(self):
         self.video_path = QFileDialog.getOpenFileName(
@@ -169,7 +170,8 @@ class MainWindow(QMainWindow):
             # Show Process Button
             process_button = QPushButton("Process Video")
             self.main_layout.addWidget(process_button, alignment=Qt.AlignmentFlag.AlignCenter)
-            process_button.clicked.connect(lambda: MainWindow._reset_window(self.main_layout))  # Placeholder for processing logic
+            process_button.clicked.connect(lambda: (reset_window(self.main_layout), self._process_video_window()))  # Placeholder for processing logic
+
 
     def _on_overlay_button_clicked(self):
         self.overlay_path = QFileDialog.getOpenFileName(
