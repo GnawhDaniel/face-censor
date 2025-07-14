@@ -6,26 +6,21 @@ from PyQt6.QtWidgets import (
     QPushButton,
 )
 
-class Choose():
+class ChooseWidgets():
     def __init__(self, icon_path, text, event_handler):
-        self.layout = QVBoxLayout()
-        self.layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
         icon = QIcon(icon_path)
-        button = QPushButton()
-        button.setIcon(icon)
-        button.setIconSize(QSize(200, 200))
-        button.setFixedSize(200, 200)
-        button.setStyleSheet("border: none;")
-        button.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.layout.addWidget(button)
-        button.clicked.connect(event_handler)
+        self.button = QPushButton()
+        self.button.setIcon(icon)
+        self.button.setIconSize(QSize(200, 200))
+        self.button.setFixedSize(200, 200)
+        self.button.setStyleSheet("border: none;")
+        self.button.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.button.clicked.connect(event_handler)
 
-
-        prompt = QLabel(text)
-        prompt.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        prompt.setStyleSheet("color: white; font-size: 18px;")
-        self.layout.addWidget(prompt)
+        self.prompt = QLabel(text)
+        self.prompt.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.prompt.setStyleSheet("color: white; font-size: 18px;")
     
-    def get_layout(self):
-        return self.layout
+    def get_widget(self):
+        return self.button, self.prompt
+

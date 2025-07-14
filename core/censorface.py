@@ -61,6 +61,7 @@ class CensorFace:
 
         # Initialize variables
         self.video_path = None # Path to the video file
+        self.overlay_path = None
         self.overlay_gif = []
         self.overlay_h = 0
         self.overlay_w = 0
@@ -80,6 +81,32 @@ class CensorFace:
         # model_path = hf_hub_download(repo_id="arnabdhar/YOLOv8-Face-Detection", filename="model.pt")
         self.model = YOLO("models/yolov12l-face.pt")
 
+    def get_video_info(self):
+        """
+        Get the path to the video file.
+        :return: Path to the video file.
+        """
+
+        if not self.video_path:
+            return {}
+        
+        _temp = sv.get_video_frames_generator(source_path=self.video_path)
+        thumbnail = next(_temp) if _temp else None
+        del _temp
+
+        info = {
+            "video_info": self.video_info,
+            "path": self.video_path,
+            "thumbnail": thumbnail,
+        }
+        return info
+
+    def get_overlay_path(self):
+        """
+        Get the path to the overlay image or gif.
+        :return: Path to the overlay image or gif.
+        """
+        return self.overlay_path
 
     def load_video(self, video_path):
         """
@@ -95,6 +122,7 @@ class CensorFace:
     def load_overlay(self, is_gif=False, overlay_path=None, gif_frames=0):
         # Load overlay image
         self.is_gif = is_gif
+        self.overlay_path = overlay_path
         if self.is_gif:
             self.overlay_gif = [cv2.imread(os.path.join(overlay_path, f"frame_{i}.png")) for i in range(self.gif_frames)]
             self.overlay_img = self.to_overlay_gif[0]
