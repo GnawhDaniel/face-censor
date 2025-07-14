@@ -172,14 +172,9 @@ class CensorFace:
                         image[y1:y2, x1:x2] = overlay_crop
 
                 # Save or display result
-                # cv2.imshow("Overlay Result", image)
                 frame_coords = {"frame": frame_count, "coords": {"x1":x1, "x2":x2, "y1":y1, "y2":y2}}
                 coord_list.append(frame_coords)
                 sink.write_frame(image)
-
-                # Allow user to quit early
-                if cv2.waitKey(1) & 0xFF == ord('q'):
-                    break
 
                 count += 1
                 frame_count += 1
