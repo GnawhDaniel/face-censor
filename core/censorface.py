@@ -6,6 +6,7 @@ import math
 import os
 import supervision as sv
 import json
+from multiprocessing import Value
 
 
 class CensorFace:
@@ -73,6 +74,8 @@ class CensorFace:
         self.video_info = None
         self.frame_generator = None
 
+        self.processed_frames = Value("i", 0) # Number of processed frames
+
         # Parameters
         self.frame_overlay = frame_overlay # For every x frames, detect new face position and keep attempting until success 
         self.output_path = output_path # Path to save the output video
@@ -132,7 +135,6 @@ class CensorFace:
             self.overlay_img = cv2.imread(overlay_path)
             self.overlay_h, self.overlay_w = self.overlay_img.shape[:2]
 
-
     def execute(self):
         # Loop through results
         x1,x2,y1,y2,overlay_crop = 0, 0, 0, 0, None # For first frame purposes
@@ -146,7 +148,7 @@ class CensorFace:
         with sv.VideoSink(self.output_path, video_info=self.video_info) as sink:
             for frame in self.frame_generator:
                 # Logging
-                print(f"{frame_count:05d}/{self.video_info.total_frames:05d} - {(frame_count / self.video_info.total_frames * 100):2.2f}%")
+                # print(f"{frame_count:05d}/{self.video_info.total_frames:05d} - {(frame_count / self.video_info.total_frames * 100):2.2f}%")
 
                 res = self.model(frame,verbose=False)[0]
                 image = frame
@@ -178,10 +180,24 @@ class CensorFace:
 
                 count += 1
                 frame_count += 1
+                self.processed_frames.value += 1
 
             file = open(".image_cache/data.json", 'w')
             json.dump(coord_list, file, indent=4)
             file.close()
 
+    def get_processed_frames(self):
+        """
+        Get the number of processed frames.
+        :return: Number of processed frames.
+        """
+        return self.processed_frames
+
+    def get_max_frames(self):
+        """
+        Get the maximum number of frames in the overlay gif.
+        :return: Maximum number of frames in the overlay gif.
+        """
+        return self.video_info.total_frames
 
 
