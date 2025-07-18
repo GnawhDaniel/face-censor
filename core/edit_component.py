@@ -20,7 +20,10 @@ class EditComponent(QWidget):
         self.frame_gen = sv.get_video_frames_generator(source_path=self.video["path"])
         self.frame_num = 0
 
-        self.parent.censor.load_overlay("assets/media/tracking.png")
+        self.overlay_path = self.parent.censor.get_overlay_path()
+
+        if self.overlay_path:
+            self.parent.censor.load_overlay("assets/media/tracking.png")
 
         with open(".image_cache/data.json", 'r') as f:
             self.coords = json.load(f)
@@ -54,6 +57,10 @@ class EditComponent(QWidget):
     def play_video(self):
         """Start playing the video"""
         # Reset the frame generator
+        if not self.overlay_path:
+            print("Popup ")
+            # TODO: Create Popup prompting user to select an image
+
         self.frame_gen = sv.get_video_frames_generator(source_path=self.video["path"])
         self.timer.start(self.video["video_info"].fps)
         

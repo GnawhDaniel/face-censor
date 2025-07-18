@@ -105,7 +105,7 @@ class ProcessComponent(QWidget):
 
         if decimal_value == 1:
             edit_button = QPushButton("Edit Video")
-            edit_button.clicked.connect(lambda: (reset_window(self.parent.main_layout))) #TODO: Clear all layouts and widgets and move to next screen
+            edit_button.clicked.connect(self.parent._start_editing) #TODO: Clear all layouts and widgets and move to next screen
             self.process_layout.addWidget(edit_button)
             
 

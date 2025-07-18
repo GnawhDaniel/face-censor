@@ -8,6 +8,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 from core.start_component import StartWindow
+from core.choose_overlay_component import OverlayComponent
 from core.process_component import ProcessComponent
 from core.censorface import CensorFace
 from utils.delete_layout import reset_window
@@ -25,6 +26,8 @@ class MainWindow(QMainWindow):
 
         self.output_path = "output/censored_video.mp4"  # Default output path
         self.process = None
+        
+        self.overlay = None
 
         # Toolbar
         toolbar = QToolBar("Main Toolbar")
@@ -57,7 +60,7 @@ class MainWindow(QMainWindow):
         _component = ChooseVideoComponent(self)
 
         # TODO: Remove
-        debug_action.triggered.connect(lambda: (self.censor.load_video("/home/danie/Videos/untitled.mp4"), reset_window(self.main_layout), EditComponent(self)))
+        debug_action.triggered.connect(lambda: (self.censor.load_video("/home/danie/Videos/untitled.mp4"), self._start_editing()))
         toolbar.addAction(debug_action)
 
     def _cleanup_processing_model(self):
@@ -72,6 +75,12 @@ class MainWindow(QMainWindow):
     
     def _start_process(self):
         self.process = ProcessComponent(self)
+    
+    def _start_editing(self):
+        reset_window(self.main_layout)
+        self.overlay = OverlayComponent(self)
+        EditComponent(self)
+
 
 
 def main():

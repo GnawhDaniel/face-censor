@@ -1,19 +1,15 @@
-from multiprocessing import process
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPixmap, QImage
 from PyQt6.QtWidgets import (
     QLabel,
-    QGridLayout,
     QFileDialog,
     QWidget,
     QPushButton,
     QVBoxLayout,
     QHBoxLayout
 )
-from sympy import true
 from core.choose_component import ChooseWidgets
 import os
-from utils.delete_layout import reset_window
 
 class ChooseVideoComponent(QWidget):
     def __init__(self, parent=None):
