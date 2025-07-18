@@ -6,10 +6,13 @@ from PyQt6.QtWidgets import (
     QGridLayout,
     QWidget,
     QPushButton,
+    QSizePolicy,
     QProgressBar
 )
 import time
 from multiprocessing import Process
+from utils.delete_layout import reset_window
+
 
 
 class ProcessMonitorWorker(QRunnable):
@@ -68,21 +71,24 @@ class ProcessComponent(QWidget):
 
         self.censor = parent.censor
         self.progress_bar = ProgressBar(self)
+        self.progress_bar.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         self.progress_bar.setMinimum(0)
         self.progress_bar.setMaximum(100)
-        parent.main_layout.addWidget(self.progress_bar, alignment=Qt.AlignmentFlag.AlignCenter)
+        # parent.main_layout.addWidget(self.progress_bar, alignment=Qt.AlignmentFlag.AlignCenter)
 
         # Initialize the layout
         self.process_layout = QGridLayout()
         self.process_layout.setSpacing(0)
 
-        for col in range(2):
-            self.process_layout.setColumnStretch(col, 1)
+        # for col in range(2):
+        #     self.process_layout.setColumnStretch(col, 1)
 
         qlabel = QLabel("Processing Video...")
-        self.process_layout.addWidget(qlabel, 0, 0, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.process_layout.addWidget(qlabel, 0, 0, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.process_layout.addWidget(self.progress_bar)
 
         parent.main_layout.addLayout(self.process_layout)
+
         self.start_processing()
 
     def update_progress(self, value):
@@ -96,6 +102,12 @@ class ProcessComponent(QWidget):
 
         self.progress_bar.setValue(percent_value)
         self.progress_bar.setFormat(f"{decimal_value:.2%}")
+
+        if decimal_value == 1:
+            edit_button = QPushButton("Edit Video")
+            edit_button.clicked.connect(lambda: (reset_window(self.parent.main_layout))) #TODO: Clear all layouts and widgets and move to next screen
+            self.process_layout.addWidget(edit_button)
+            
 
     def start_processing(self):
         # Start the worker in a separate thread
