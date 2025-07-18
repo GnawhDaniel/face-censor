@@ -1,4 +1,4 @@
-from PyQt6.QtCore import QSize, Qt
+from PyQt6.QtCore import QSize, Qt, QObject, pyqtSignal
 from PyQt6.QtGui import QAction
 from PyQt6.QtWidgets import (
     QApplication,
@@ -11,6 +11,8 @@ from core.start_component import StartWindow
 from core.process_component import ProcessComponent
 from core.censorface import CensorFace
 from utils.delete_layout import reset_window
+from core.choose_video_component import ChooseVideoComponent
+from core.edit_component import EditComponent
 
 
 class MainWindow(QMainWindow):
@@ -48,17 +50,17 @@ class MainWindow(QMainWindow):
             output_path=self.output_path
         )
 
-        QApplication.instance().aboutToQuit.connect(self.cleanup)
+        QApplication.instance().aboutToQuit.connect(self._cleanup_processing_model)
 
         # Main Content
-        StartWindow(self)
-
+        # StartWindow(self)
+        _component = ChooseVideoComponent(self)
 
         # TODO: Remove
-        debug_action.triggered.connect(lambda: (reset_window(self.main_layout), self._start_process()))
+        debug_action.triggered.connect(lambda: (self.censor.load_video("/home/danie/Videos/untitled.mp4"), reset_window(self.main_layout), EditComponent(self)))
         toolbar.addAction(debug_action)
 
-    def cleanup(self):
+    def _cleanup_processing_model(self):
         # TODO: make variables less confusing lol
         # process is the multiprocessing Processor object
         # self.process points to the ProcessComponent
@@ -70,8 +72,7 @@ class MainWindow(QMainWindow):
     
     def _start_process(self):
         self.process = ProcessComponent(self)
-        
-    
+
 
 def main():
     app = QApplication([])

@@ -26,7 +26,7 @@ class CensorFace:
         :return: Coordinates for the overlay position and the cropped overlay image.
         """
         # Get detection center
-        x1_det, y1_det, x2_det, y2_det = detection.xyxy[0][:4]
+        x1_det, y1_det, x2_det, y2_det = detection
         cx = int((x1_det + x2_det) / 2)
         cy = int((y1_det + y2_det) / 2)    
 
@@ -122,7 +122,7 @@ class CensorFace:
         self.tracker = sv.ByteTrack(frame_rate=self.video_info.fps)
         self.smoother = sv.DetectionsSmoother(length=3)
 
-    def load_overlay(self, is_gif=False, overlay_path=None, gif_frames=0):
+    def load_overlay(self, overlay_path=None,is_gif=False, gif_frames=0):
         # Load overlay image
         self.is_gif = is_gif
         self.overlay_path = overlay_path
@@ -137,54 +137,40 @@ class CensorFace:
 
     def execute(self):
         # Loop through results
-        x1,x2,y1,y2,overlay_crop = 0, 0, 0, 0, None # For first frame purposes
+        x1,x2,y1,y2 = 0, 0, 0, 0 # For first frame purposes
 
         count = 0
         frame_count = 0
         coord_list = []
 
-        to_overlay = self.to_overlay_gif[0] if self.is_gif else cv2.imread(self.overlay_path)
+        for frame in self.frame_generator:
 
-        with sv.VideoSink(self.output_path, video_info=self.video_info) as sink:
-            for frame in self.frame_generator:
-                # Logging
-                # print(f"{frame_count:05d}/{self.video_info.total_frames:05d} - {(frame_count / self.video_info.total_frames * 100):2.2f}%")
+            res = self.model(frame,verbose=False)[0]
 
-                res = self.model(frame,verbose=False)[0]
-                image = frame
+            # Check for detections
+            if (count >= self.frame_overlay):
+                detections = sv.Detections.from_ultralytics(res)
+                detections = self.tracker.update_with_detections(detections)
+                detections = self.smoother.update_with_detections(detections)
+                if detections:
+                    x1, y1, x2, y2 = detections.xyxy[0][:4]
 
-                if self.is_gif:
-                    to_overlay = self.overlay_gif[frame_count % self.gif_frames]
-                
-                # Check for detections
-                if (count >= self.frame_overlay):
-                    detections = sv.Detections.from_ultralytics(res)
-                    detections = self.tracker.update_with_detections(detections)
-                    detections = self.smoother.update_with_detections(detections)
+            # Save or display result
+            frame_coords = {"frame": frame_count, 
+                            "coords": 
+                                {"x1": float(x1), 
+                                 "x2": float(x2), 
+                                 "y1": float(y1), 
+                                 "y2": float(y2)}}
+            
+            coord_list.append(frame_coords)
 
-                    if detections.xyxy.size > 0:
-                        x1,x2,y1,y2,overlay_crop = CensorFace.bound(detections, to_overlay, self.overlay_w, self.overlay_h, (image.shape[0], image.shape[1]))
-                        count = 0
+            count += 1
+            frame_count += 1
+            self.processed_frames.value += 1
 
-                # Overlay
-                if x2: # If detection has occurred before
-                    if (self.is_gif):
-                        image[y1:y2, x1:x2] = to_overlay[:y2 - y1, :x2 - x1]
-                    else:
-                        image[y1:y2, x1:x2] = overlay_crop
-
-                # Save or display result
-                frame_coords = {"frame": frame_count, "coords": {"x1":x1, "x2":x2, "y1":y1, "y2":y2}}
-                coord_list.append(frame_coords)
-                sink.write_frame(image)
-
-                count += 1
-                frame_count += 1
-                self.processed_frames.value += 1
-
-            file = open(".image_cache/data.json", 'w')
+        with open(".image_cache/data.json", 'w') as file:
             json.dump(coord_list, file, indent=4)
-            file.close()
 
     def get_processed_frames(self):
         """
@@ -200,4 +186,20 @@ class CensorFace:
         """
         return self.video_info.total_frames
 
+    def censor(self, frame, coord):
+        # return frame
 
+        x1 = coord["coords"]["x1"]
+        x2 = coord["coords"]["x2"]
+        y1 = coord["coords"]["y1"]
+        y2 = coord["coords"]["y2"]
+        
+        x1,x2,y1,y2,overlay_crop = CensorFace.bound([x1,y1,x2,y2], 
+                                                    self.overlay_img, 
+                                                    self.overlay_w, 
+                                                    self.overlay_h, 
+                                                    (frame.shape[0], frame.shape[1])
+                                                    )
+
+        frame[y1:y2, x1:x2] = overlay_crop
+        return frame
