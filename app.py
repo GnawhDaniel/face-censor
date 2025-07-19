@@ -6,6 +6,7 @@ from PyQt6.QtWidgets import (
     QToolBar,
     QVBoxLayout,
     QWidget,
+    QHBoxLayout
 )
 from core.start_component import StartWindow
 from core.choose_overlay_component import OverlayComponent
@@ -44,9 +45,9 @@ class MainWindow(QMainWindow):
         self.main_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         # Bottom most widget
-        widget = QWidget()
-        widget.setLayout(self.main_layout)
-        self.setCentralWidget(widget)
+        self.widget = QWidget()
+        self.widget.setLayout(self.main_layout)
+        self.setCentralWidget(self.widget)
 
         self.censor = CensorFace(
             frame_overlay=3,  # Default frame overlay
@@ -78,6 +79,9 @@ class MainWindow(QMainWindow):
     
     def _start_editing(self):
         reset_window(self.main_layout)
+
+        # self.widget.setLayout(None)
+        # self.widget.setLayout(None)
         self.overlay = OverlayComponent(self)
         EditComponent(self)
 

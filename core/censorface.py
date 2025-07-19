@@ -122,9 +122,10 @@ class CensorFace:
         self.tracker = sv.ByteTrack(frame_rate=self.video_info.fps)
         self.smoother = sv.DetectionsSmoother(length=3)
 
-    def load_overlay(self, overlay_path=None,is_gif=False, gif_frames=0):
+    def load_overlay(self, overlay_path=None, is_gif=False, gif_frames=0):
         # Load overlay image
         self.is_gif = is_gif
+        print('debug')
         self.overlay_path = overlay_path
         if self.is_gif:
             self.overlay_gif = [cv2.imread(os.path.join(overlay_path, f"frame_{i}.png")) for i in range(self.gif_frames)]

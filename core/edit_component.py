@@ -48,7 +48,7 @@ class EditComponent(QWidget):
         layout.addWidget(self.video_label, 0, 0)
         
         # Add play button
-        play_button = QPushButton("Play Video")
+        play_button = QPushButton("Process Video")
         play_button.clicked.connect(self.play_video)
         layout.addWidget(play_button, 1, 0)
         
@@ -57,10 +57,13 @@ class EditComponent(QWidget):
     def play_video(self):
         """Start playing the video"""
         # Reset the frame generator
+        self.overlay_path = self.parent.censor.get_overlay_path()
         if not self.overlay_path:
             print("Popup ")
             # TODO: Create Popup prompting user to select an image
+            return
 
+        self.frame_num = 0
         self.frame_gen = sv.get_video_frames_generator(source_path=self.video["path"])
         self.timer.start(self.video["video_info"].fps)
         
